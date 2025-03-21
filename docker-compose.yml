@@ -1,0 +1,74 @@
+version: "3.7"
+
+services:
+  app:
+    container_name: "go-clean-architecture"
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./:/app
+      - $GOPATH/pkg/mod/cache:/go/pkg/mod/cache
+    env_file:
+      - .env
+    networks:
+      - backend
+    depends_on:
+      - postgres
+      - localstack
+      - dynamodb-admin
+
+  postgres:
+    container_name: "postgres"
+    image: "postgres:12.2-alpine"
+    ports:
+      - "5433:5433"
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: user_account
+    volumes:
+      - ./_scripts/postgres:/docker-entrypoint-initdb.d
+    networks:
+      - backend
+
+  localstack:
+    container_name: "localstack"
+    image: localstack/localstack:1.4
+    environment:
+      - SERVICES=dynamodb
+      - HOSTNAME_EXTERNAL=localstack
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+      - AWS_DEFAULT_REGION=ap-northeast-1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - ./_scripts/localstack/init:/docker-entrypoint-initaws.d
+      - ./_scripts/localstack/init/json:/json
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 4566:4566
+    networks:
+      - backend
+
+  dynamodb-admin:
+    container_name: dynamodb-admin
+    image: aaronshaf/dynamodb-admin
+    ports:
+      - "8002:8002"
+    depends_on:
+      - localstack
+    environment:
+      - PORT=8002
+      - DYNAMO_ENDPOINT=http://localstack:4566
+      - AWS_REGION=ap-northeast-1
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+    networks:
+      - backend
+
+networks:
+  backend:
