@@ -1,0 +1,1 @@
+bash ../dynamodb/dynamodb.sh

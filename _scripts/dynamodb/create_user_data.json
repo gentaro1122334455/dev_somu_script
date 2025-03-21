@@ -1,0 +1,18 @@
+{
+    "AttributeDefinitions": [
+        {
+            "AttributeName": "id",
+            "AttributeType": "S"
+        },
+        {
+            "AttributeName": "data_1",
+            "AttributeType": "S"
+        }
+    ],
+    "KeySchema": [
+        {
+            "AttributeName": "id",
+            "KeyType": "HASH"
+        }
+    ]
+}
